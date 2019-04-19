@@ -19,7 +19,8 @@
     [
       "@babel/transform-runtime",
       {
-        "regenerator": true
+        "regenerator": true,
+        "helpers": true
       }
     ],
     "@babel/proposal-class-properties"
