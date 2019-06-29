@@ -9,15 +9,16 @@ export class AbortError extends Error {
  * Takes a function that has one argument, abortSignal, that returns a promise
  * and it works by retrying the function if a previous attempt to initialize the parse cache was aborted
  */
-export class AbortAwareCache {
-  private cache: Map<(abortSignal: AbortSignal) => Promise<any>, any> = new Map()
+export class AbortAwareCache<T> {
+  private cache: Map<(abortSignal: AbortSignal) => Promise<T>, Promise<T>> = new Map()
 
   public abortableMemoize(
-    fn: (abortSignal?: AbortSignal) => Promise<any>,
-  ): (abortSignal?: AbortSignal) => Promise<any> {
+    fn: (abortSignal?: AbortSignal) => Promise<T>,
+  ): (abortSignal?: AbortSignal) => Promise<T> {
     const { cache } = this
     return function abortableMemoizeFn(abortSignal?: AbortSignal) {
-      if (!cache.has(fn)) {
+      const res = cache.get(fn)
+      if (!res) {
         const fnReturn = fn(abortSignal)
         cache.set(fn, fnReturn)
         if (abortSignal) {
@@ -25,9 +26,9 @@ export class AbortAwareCache {
             if (abortSignal.aborted) cache.delete(fn)
           })
         }
-        return cache.get(fn)
+        return fnReturn
       }
-      return cache.get(fn).catch((e: AbortError | DOMException) => {
+      return res.catch((e: AbortError | DOMException) => {
         if (e.code === 'ERR_ABORTED' || e.name === 'AbortError') {
           return fn(abortSignal)
         }
