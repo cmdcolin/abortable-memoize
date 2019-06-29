@@ -1,6 +1,7 @@
 language: node_js
 script:
   - yarn lint
+  - yarn build
   - yarn test --coverage
 cache:
   - yarn
