@@ -1,4 +1,4 @@
-import {AbortAwareCache} from '../src/'
+import {AbortError,AbortAwareMemoize} from '../src/'
 
 class HalfAbortController {
   public signal: any
@@ -40,14 +40,14 @@ export function checkAbortSignal(signal?: AbortSignal): void {
 }
 test('test memoize', async () => {
   let res
-  const ti = new AbortAwareCache()
+  const ti = new AbortAwareMemoize<{hello:string,testOfMemoization?:boolean}>()
   const newFunc = ti.abortableMemoize(() => {
     return new Promise(resolve => {
       resolve({hello: 'world'})
     })
   })
   res = await newFunc()
-  // this persists after memoizing since ref to it was saved in the AbortAwareCache
+  // this persists after memoizing since ref to it was saved in the AbortAwareMemoize
   res.testOfMemoization = true
   res = await newFunc()
   expect(res.hello).toEqual('world')
@@ -56,7 +56,7 @@ test('test memoize', async () => {
 
 test('test aborting', async () => {
   let res
-  const ti = new AbortAwareCache()
+  const ti = new AbortAwareMemoize<{hello:string}>()
   const newFunc = ti.abortableMemoize((abortSignal) => {
     return new Promise(resolve => {
       checkAbortSignal(abortSignal)
@@ -66,7 +66,7 @@ test('test aborting', async () => {
   const aborter = new HalfAbortController()
   aborter.abort()
   await expect(newFunc(aborter.signal)).rejects.toThrow(/aborted/)
-  // this persists after memoizing since ref to it was saved in the AbortAwareCache
+  // this persists after memoizing since ref to it was saved in the AbortAwareMemoize
   const aborter2 = new HalfAbortController()
   res = await newFunc(aborter2.signal)
   expect(res.hello).toEqual('world')

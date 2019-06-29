@@ -1,15 +1,12 @@
-export class AbortError extends Error {
-  public code: string
-  public constructor(message: string) {
-    super(message)
-    this.code = 'ERR_ABORTED'
-  }
-}
+import AbortError from './abortError'
+
+export {AbortError}
+
 /*
  * Takes a function that has one argument, abortSignal, that returns a promise
  * and it works by retrying the function if a previous attempt to initialize the parse cache was aborted
  */
-export class AbortAwareCache<T> {
+export class AbortAwareMemoize<T> {
   private cache: Map<(abortSignal: AbortSignal) => Promise<T>, Promise<T>> = new Map()
 
   public abortableMemoize(
